@@ -13,13 +13,11 @@ class Arm:
 
     def hand_xy(self, thetas = None):
         if thetas is None: thetas = self.Wangles
-        x = self.lengths[0] * np.cos(thetas[0]) + \
-            self.lengths[1] * np.cos(thetas[0] + thetas[1]) + \
-            self.lengths[2] * np.cos(thetas[0] + thetas[1] + thetas[2])
-
-        y = self.lengths[0] * np.sin(thetas[0]) + \
-            self.lengths[1] * np.sin(thetas[0] + thetas[1]) + \
-            self.lengths[2] * np.sin(thetas[0] + thetas[1] + thetas[2])
+        x = 0
+        y = 0
+        for i in range(len(thetas)):
+            x += self.lengths[i] * np.cos(thetas[0:(i + 1)].sum())
+            y += self.lengths[i] * np.sin(thetas[0:(i + 1)].sum())
             
         return np.array([x,y])
 
