@@ -21,26 +21,15 @@ class Arm:
             
         return np.array([x,y])
 
-    def jacobian(self):
-        x1 = -1 * self.lengths[0] * sin(self.Wangles[0]) - \
-                  self.lengths[1] * sin(self.Wangles[0] + self.Wangles[1]) - \
-                  self.lengths[2] * sin(self.Wangles[0] + self.Wangles[1] + self.Wangles[2])
-
-        x2 = -1 * self.lengths[1] * sin(self.Wangles[0] + self.Wangles[1]) - \
-                  self.lengths[2] * sin(self.Wangles[0] + self.Wangles[1] + self.Wangles[2])
-
-        x3 = -1 * self.lengths[2] * sin(self.Wangles[0] + self.Wangles[1] + self.Wangles[2])
-
-        y1 = self.lengths[0] * cos(self.Wangles[0]) + \
-             self.lengths[1] * cos(self.Wangles[0] + self.Wangles[1]) + \
-             self.lengths[2] * cos(self.Wangles[0] + self.Wangles[1] + self.Wangles[2])
-
-        y2 = self.lengths[1] * cos(self.Wangles[0] + self.Wangles[1]) + \
-             self.lengths[2] * cos(self.Wangles[0] + self.Wangles[1] + self.Wangles[2])
-
-        y3 = self.lengths[2] * cos(self.Wangles[0] + self.Wangles[1] + self.Wangles[2])
-
-        return np.matrix([[x1, x2, x3], [y1, y2, y3]])
+    def jacobian(self, thetas = None):
+        if thetas is None: thetas = self.Wangles
+        result = np.zeros(shape = (2, len(thetas)))
+        for i in range(len(thetas)):
+            for j in range(i, len(thetas)):
+                result[0][i] -= self.lengths[j] * np.sin(thetas[0:(j + 1)].sum())
+                result[1][i] += self.lengths[j] * np.cos(thetas[0:(j + 1)].sum())
+        
+        return result
 
     def slsqp(self, xy):
         def distance_func(Wangles, *args):
@@ -60,6 +49,8 @@ def simple_test():
     goal = np.array([.5, 1])
     arm.Wangles = arm.slsqp(goal)
     end = arm.hand_xy()
-    print error_between(goal, end)
+    print ("Error: " + str(error_between(goal, end)))
+    print "Jacobian:"
+    print arm.jacobian()
 
 simple_test()
