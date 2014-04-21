@@ -11,16 +11,26 @@ class Arm:
         self.lengths = lengths
         self.Wangles = self.min_angles
 
+    # Get the position of the end effector for the given joint angles.
+    # If no angles are given, this uses the current working angles of the joints.
     def hand_xy(self, thetas = None):
         if thetas is None: thetas = self.Wangles
         x = 0
         y = 0
+        # For loop trickery to allow an arbitrary number of joints.
         for i in range(len(thetas)):
             x += self.lengths[i] * np.cos(thetas[0:(i + 1)].sum())
             y += self.lengths[i] * np.sin(thetas[0:(i + 1)].sum())
             
         return np.array([x,y])
 
+    """Calculate the jacobian of the function which determines the position of the hand.
+    The Jacobian gives a linear approximation for the necessary change in joint angles, t,
+    given a change in hand position, p.
+    p ~= J*t
+    So, we need to solve this linear equation for t. If there exactly 3 joints, we can use the
+    explicit inverse of J. But, when J is nearly singular, the inverse has poor performance.
+    So, we explore different options, like the pseudo-inverse and transpose."""
     def jacobian(self, thetas = None):
         if thetas is None: thetas = self.Wangles
         result = np.zeros(shape = (2, len(thetas)))
@@ -31,6 +41,7 @@ class Arm:
         
         return result
 
+    # Use the SciPy method fmin_slsqp, instead of the Jacobian, to solve for the new joint angles.
     def slsqp(self, xy):
         def distance_func(Wangles, *args):
             '''minimize this'''
@@ -39,9 +50,18 @@ class Arm:
         def constraint(thetas, xy, *args):
             return self.hand_xy(thetas) - xy
 
+        # func is the function to minimize.
+        # x0 is the initial list of arguments.
+        # f_eqcons is a function which returns a vector which is all 0 after a successful optimization.
+        # args is a list of extra arguments to pass to the f_eqcons function.
+        # disp sets the desired printing verbosity.
+        # See http://docs.scipy.org/doc/scipy-0.13.0/reference/generated/scipy.optimize.fmin_slsqp.html
         return sp.optimize.fmin_slsqp(func = distance_func, x0 = self.Wangles, f_eqcons = constraint, args = [xy], disp = 0)
 
-    def pinv_jacobian(self, xy):    # Only works well when xy is close to the current position! Otherwise, this is pretty bad.
+    # Solve for the new joint angles using the pseudo-inverse of the Jacobian.
+    # This only works well when xy is sufficiently close to the current position!
+    # Otherwise, this will require multiple iterations.
+    def pinv_jacobian(self, xy):
         inv = np.linalg.pinv(self.jacobian())
         return self.Wangles + np.dot(inv, (xy - self.hand_xy()))
 
@@ -64,4 +84,24 @@ def simple_test():
     print
     print ("Scipy Error: " + str(error_between(goal, end)))
     print ("Pinv  Error: " + str(error_between(goal, pinv_end)))
+
+# Run the pseudo inverse method over and over, until the error falls below the threshold,
+# then print the required number of iterations.
+def test(threshold = None, goal = None):
+    arm = Arm()
+    if goal is None: goal = np.array([2, 1.5])
+    if threshold is None: threshold = .01
+    arm.Wangles = arm.pinv_jacobian(goal)
+    count = 1
+    while (error_between(goal, arm.hand_xy()) > threshold and count < 50):
+        count += 1
+        arm.Wangles = arm.pinv_jacobian(goal)
+
+    print ("Threshold: " + str(threshold) + " -> " + str(count) + " iterations.")
+
 simple_test()
+
+print
+
+for i in [-2, -5, -10, -20, -50]:
+    test(10 ** (i))
