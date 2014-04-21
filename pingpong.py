@@ -1,15 +1,11 @@
 from arm import Arm
-import scipy as sp
-import numpy as np
 import pyglet
 
 def plot():
+    arm = Arm()
     window = pyglet.window.Window()
-    arm = Arm(lengths = np.array([200, 150, 100, 75]), start_angles = np.array([0, 0, 0, 0]))
 
     joints = arm.get_joints()
-
-    print joints
 
     @window.event
     def on_draw():

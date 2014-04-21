@@ -4,8 +4,8 @@ import scipy.optimize
 
 class Arm:
     def __init__(self, lengths = None, start_angles = None):
-        if start_angles is None: start_angles = np.array([0, 0, -sp.pi/4])
-        if lengths is None: lengths = np.array([200, 200, 200])
+        if start_angles is None: start_angles = np.array([0,0,-sp.pi/4])
+        if lengths is None: lengths = np.array([250,175,100])
         self.lengths = lengths
         self.Wangles = start_angles
 
@@ -54,7 +54,7 @@ class Arm:
             '''minimize this'''
             return np.sqrt(np.sum((thetas-self.Wangles)**2))
 
-        def constraint(thetas, xy, *args):
+        def optimize(thetas, xy, *args):
             return self.hand_xy(thetas) - xy
 
         # func is the function to minimize.
@@ -63,7 +63,7 @@ class Arm:
         # args is a list of extra arguments to pass to the f_eqcons function.
         # disp sets the desired printing verbosity.
         # See http://docs.scipy.org/doc/scipy-0.13.0/reference/generated/scipy.optimize.fmin_slsqp.html
-        return sp.optimize.fmin_slsqp(func = distance_func, x0 = self.Wangles, f_eqcons = constraint, args = [xy], disp = 0)
+        return sp.optimize.fmin_slsqp(func = distance_func, x0 = self.Wangles, f_eqcons = optimize, args = [xy], disp = 0)
 
     # Solve for the new joint angles using the pseudo-inverse of the Jacobian.
     # This only works well when xy is sufficiently close to the current position!
