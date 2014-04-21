@@ -1,23 +1,25 @@
 import numpy as np
 import scipy as sp
+import scipy.optimize
 
-def armLink(self, lengths=None):
-    def __init__(self):
-        self.max_angles = np.array([math.pi, math.pi, math.pi/4])
-        self.min_angles = np.array([0,0,-math.pi/4])
+class Arm:
+    def __init__(self, lengths = None):
+        self.max_angles = np.array([sp.pi, sp.pi, sp.pi/4])
+        self.min_angles = np.array([0,0,-sp.pi/4])
         if lengths is None:
             lengths = np.array([1,1,1])
         self.lengths = lengths
         self.Wangles = self.min_angles
 
-    def hand_xy(self):
-        x = self.lengths[0] * np.cos(self.Wangles[0]) + \
-            self.lengths[1] * np.cos(self.Wangles[0] + self.Wangles[1]) + \
-            self.lengths[2] * np.cos(self.Wangles[0] + self.Wangles[1] + self.Wangles[2])
+    def hand_xy(self, thetas = None):
+        if thetas is None: thetas = self.Wangles
+        x = self.lengths[0] * np.cos(thetas[0]) + \
+            self.lengths[1] * np.cos(thetas[0] + thetas[1]) + \
+            self.lengths[2] * np.cos(thetas[0] + thetas[1] + thetas[2])
 
-        y = self.lengths[0] * np.sin(self.Wangles[0]) + \
-            self.lengths[1] * np.sin(self.Wangles[0] + self.Wangles[1]) + \
-            self.lengths[2] * np.sin(self.Wangles[0] + self.Wangles[1] + self.Wangles[2])
+        y = self.lengths[0] * np.sin(thetas[0]) + \
+            self.lengths[1] * np.sin(thetas[0] + thetas[1]) + \
+            self.lengths[2] * np.sin(thetas[0] + thetas[1] + thetas[2])
             
         return np.array([x,y])
 
@@ -37,21 +39,29 @@ def armLink(self, lengths=None):
 
         y2 = self.lengths[1] * cos(self.Wangles[0] + self.Wangles[1]) + \
              self.lengths[2] * cos(self.Wangles[0] + self.Wangles[1] + self.Wangles[2])
-             
+
         y3 = self.lengths[2] * cos(self.Wangles[0] + self.Wangles[1] + self.Wangles[2])
 
         return np.matrix([[x1, x2, x3], [y1, y2, y3]])
 
+    def slsqp(self, xy):
+        def distance_func(Wangles, *args):
+            '''minimize this'''
+            return np.sqrt(np.sum((Wangles-self.min_angles)**2))
 
-    def distance_func(self):
-        '''minimize this'''
-        np.temp = (self.Wangles-self.min_angles)**2
-        return np.sqrt(np.sum(temp))
+        def constraint(thetas, xy, *args):
+            return self.hand_xy(thetas) - xy
 
-    def kinematics(self, xy):
-        result = sp.optimize.fmin_slsqp(distance_func, self.Wangles, hand_xy-xy,xy,0)
+        return sp.optimize.fmin_slsqp(func = distance_func, x0 = self.Wangles, f_eqcons = constraint, args = [xy], disp = 0)
 
+def error_between(a, b):
+    return np.sqrt(((a - b)**2).sum())
 
+def simple_test():
+    arm = Arm()
+    goal = np.array([.5, 1])
+    arm.Wangles = arm.slsqp(goal)
+    end = arm.hand_xy()
+    print error_between(goal, end)
 
-
-
+simple_test()
