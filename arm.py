@@ -41,16 +41,27 @@ class Arm:
 
         return sp.optimize.fmin_slsqp(func = distance_func, x0 = self.Wangles, f_eqcons = constraint, args = [xy], disp = 0)
 
+    def pinv_jacobian(self, xy):    # Only works well when xy is close to the current position! Otherwise, this is pretty bad.
+        inv = np.linalg.pinv(self.jacobian())
+        return self.Wangles + np.dot(inv, (xy - self.hand_xy()))
+
 def error_between(a, b):
     return np.sqrt(((a - b)**2).sum())
 
 def simple_test():
     arm = Arm()
-    goal = np.array([.5, 1])
+    goal = np.array([2.65, -.6])
+    print ("Start:       " + str(arm.hand_xy()))
+    print ("Goal:        " + str(goal))
+    print
+    pinv_end = arm.hand_xy(arm.pinv_jacobian(goal))
+    print ("Pinv end:    " + str(pinv_end))
+
     arm.Wangles = arm.slsqp(goal)
     end = arm.hand_xy()
-    print ("Error: " + str(error_between(goal, end)))
-    print "Jacobian:"
-    print arm.jacobian()
 
+    print ("Scipy end:   " + str(end))
+    print
+    print ("Scipy Error: " + str(error_between(goal, end)))
+    print ("Pinv  Error: " + str(error_between(goal, pinv_end)))
 simple_test()
