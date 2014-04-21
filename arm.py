@@ -3,14 +3,11 @@ import scipy as sp
 import scipy.optimize
 
 class Arm:
-    def __init__(self, lengths = None, max_angles = None, min_angles = None):
-        if max_angles is None: max_angles = np.array([sp.pi, sp.pi, sp.pi/4])
-        if min_angles is None: min_angles = np.array([0,0,-sp.pi/4])
-        if lengths is None: lengths = np.array([200,200,200])
+    def __init__(self, lengths = None, start_angles = None):
+        if start_angles is None: start_angles = np.array([0, 0, -sp.pi/4])
+        if lengths is None: lengths = np.array([200, 200, 200])
         self.lengths = lengths
-        self.max_angles = max_angles
-        self.min_angles = min_angles
-        self.Wangles = self.min_angles
+        self.Wangles = start_angles
 
     # Get the position of the end effector for the given joint angles.
     # If no angles are given, this uses the current working angles of the joints.
@@ -53,9 +50,9 @@ class Arm:
 
     # Use the SciPy method fmin_slsqp, instead of the Jacobian, to solve for the new joint angles.
     def slsqp(self, xy):
-        def distance_func(Wangles, *args):
+        def distance_func(thetas, *args):
             '''minimize this'''
-            return np.sqrt(np.sum((Wangles-self.min_angles)**2))
+            return np.sqrt(np.sum((thetas-self.Wangles)**2))
 
         def constraint(thetas, xy, *args):
             return self.hand_xy(thetas) - xy
@@ -97,7 +94,7 @@ def simple_test():
 
 # Run the pseudo inverse method over and over, until the error falls below the threshold,
 # then print the required number of iterations.
-def test(threshold = None, goal = None):
+def threshold_test(threshold = None, goal = None):
     arm = Arm()
     if goal is None: goal = np.array([2, 1.5])
     if threshold is None: threshold = .01
@@ -109,12 +106,10 @@ def test(threshold = None, goal = None):
 
     print ("Threshold: " + str(threshold) + " -> " + str(count) + " iterations.")
 
+def threshold_test_runner():
+    for i in [-2, -5, -10, -20, -50]:
+        test(10 ** (i))
+
 # simple_test()
-
 # print
-
-# for i in [-2, -5, -10, -20, -50]:
-#     test(10 ** (i))
-
-arm = Arm()
-print arm.get_joints()
+# threshold_test_runner()
