@@ -3,12 +3,13 @@ import scipy as sp
 import scipy.optimize
 
 class Arm:
-    def __init__(self, lengths = None):
-        self.max_angles = np.array([sp.pi, sp.pi, sp.pi/4])
-        self.min_angles = np.array([0,0,-sp.pi/4])
-        if lengths is None:
-            lengths = np.array([1,1,1])
+    def __init__(self, lengths = None, max_angles = None, min_angles = None):
+        if max_angles is None: max_angles = np.array([sp.pi, sp.pi, sp.pi/4])
+        if min_angles is None: min_angles = np.array([0,0,-sp.pi/4])
+        if lengths is None: lengths = np.array([200,200,200])
         self.lengths = lengths
+        self.max_angles = max_angles
+        self.min_angles = min_angles
         self.Wangles = self.min_angles
 
     # Get the position of the end effector for the given joint angles.
@@ -23,6 +24,15 @@ class Arm:
             y += self.lengths[i] * np.sin(thetas[0:(i + 1)].sum())
             
         return np.array([x,y])
+
+    def get_joints(self, thetas = None):
+        if thetas is None: thetas = self.Wangles
+        result = np.zeros(shape = (2, len(thetas) + 1))
+        for joint in range(1, len(thetas) + 1):
+            for i in range(joint):
+                result[0][joint] += self.lengths[i] * np.cos(thetas[0:(i + 1)].sum())
+                result[1][joint] += self.lengths[i] * np.sin(thetas[0:(i + 1)].sum())
+        return result.astype('int')
 
     """Calculate the jacobian of the function which determines the position of the hand.
     The Jacobian gives a linear approximation for the necessary change in joint angles, t,
@@ -99,9 +109,12 @@ def test(threshold = None, goal = None):
 
     print ("Threshold: " + str(threshold) + " -> " + str(count) + " iterations.")
 
-simple_test()
+# simple_test()
 
-print
+# print
 
-for i in [-2, -5, -10, -20, -50]:
-    test(10 ** (i))
+# for i in [-2, -5, -10, -20, -50]:
+#     test(10 ** (i))
+
+arm = Arm()
+print arm.get_joints()
