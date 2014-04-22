@@ -5,7 +5,7 @@ import scipy.optimize
 class Arm:
     def __init__(self, lengths = None, start_angles = None):
         if start_angles is None: start_angles = np.array([0,0,-sp.pi/4])
-        if lengths is None: lengths = np.array([250,175,100])
+        if lengths is None: lengths = np.array([200,150,100])
         self.lengths = lengths
         self.Wangles = start_angles
 
