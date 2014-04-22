@@ -4,8 +4,8 @@ import scipy.optimize
 
 class Arm:
     def __init__(self, lengths = None, start_angles = None):
-        if start_angles is None: start_angles = np.array([0,0,-sp.pi/4])
         if lengths is None: lengths = np.array([200,150,100])
+        if start_angles is None: start_angles = np.zeros(len(lengths))
         self.lengths = lengths
         self.Wangles = start_angles
 
@@ -22,6 +22,8 @@ class Arm:
             
         return np.array([x,y])
 
+    # Return a list of xy pairs corresponding the the locations of every joint of the arm.
+    # Note that we add an initial joint at (0, 0).
     def get_joints(self, thetas = None):
         if thetas is None: thetas = self.Wangles
         result = np.zeros(shape = (2, len(thetas) + 1))
@@ -29,7 +31,7 @@ class Arm:
             for i in range(joint):
                 result[0][joint] += self.lengths[i] * np.cos(thetas[0:(i + 1)].sum())
                 result[1][joint] += self.lengths[i] * np.sin(thetas[0:(i + 1)].sum())
-        return result.astype('int')
+        return result.astype('int') # Return this as type int because pyglet requires it.
 
     """Calculate the jacobian of the function which determines the position of the hand.
     The Jacobian gives a linear approximation for the necessary change in joint angles, t,
