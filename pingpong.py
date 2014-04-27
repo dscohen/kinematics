@@ -12,6 +12,7 @@ def plot():
 
     # Make the pyglet window!
     window = pyglet.window.Window()
+    fps_display = pyglet.clock.ClockDisplay()
 
     # Get the ball, as a sprite, which will bounce around inside our window.
     ball_image = pyglet.image.load('ball.png')
@@ -36,6 +37,7 @@ def plot():
     @window.event
     def on_draw():
         window.clear()
+        fps_display.draw()
 
         # Get the list of joint positions, for every arm.
         joints = [arms[i].get_joints() for i in range(len(arms))]
@@ -47,24 +49,28 @@ def plot():
             ball.dy *= -1
 
         # Update the ball location.
-        ball.x += ball.dx
+        ball.x += ball.dx       # ball.x = ball.x + ball.dx
         ball.y += ball.dy
         ball.draw()
 
         # For every arm, draw a line segment from between the joints of the arm, in proper color.
         # See http://www.pyglet.org/doc/programming_guide/drawing_primitives.html for minimal help.
+        arm_batch = pyglet.graphics.Batch()
+        
         for i in range(len(arms)):
             for j in range(len(arms[i].Wangles)):
-                pyglet.graphics.draw(2, pyglet.gl.GL_LINES, \
+                arm_batch.add(2, pyglet.gl.GL_LINES, None, \
                     ('v2i', (window.width/2 + joints[i][0][j], joints[i][1][j], window.width/2 + joints[i][0][j + 1], joints[i][1][j + 1])), \
                     ('c4B', colors[i]))
 
         # Draw a paddle at the end of the first arm.
-        pyglet.graphics.draw(2, pyglet.gl.GL_LINES, \
+        arm_batch.add(2, pyglet.gl.GL_LINES, None, \
             ('v2i', (window.width/2 + joints[0][0][len(arms[0].Wangles)] - paddle_radius, \
                     joints[0][1][len(arms[0].Wangles)], \
                     window.width/2 + joints[0][0][len(arms[0].Wangles)] + paddle_radius, \
                     joints[0][1][len(arms[0].Wangles)])))
+
+        arm_batch.draw()
 
     # This method is called every time the mouse moves (shocker). We don't have to redraw the window,
     # but we do have to calculate our new working angles. This is where we decide which method to use
