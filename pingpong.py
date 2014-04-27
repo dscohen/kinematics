@@ -5,7 +5,7 @@ import pyglet
 import random
 
 def plot():
-    arms = [Arm(np.array([400 / i] * i)) for i in [20, 7, 3]]   # Array of arms with varying numbers of links to be drawn at the same time.
+    arms = [Arm(np.array([300 / i] * i)) for i in [5]]   # Array of arms with varying numbers of links to be drawn at the same time.
 
     # Array of random colors used to make each arm a different color.
     colors = [(255 - random.randint(0, 255), 255 - random.randint(0, 255), 255 - random.randint(0, 255), 255) * 2 for i in range(len(arms))]
@@ -28,8 +28,8 @@ def plot():
         inside_x = ball.x + ball.width > window.width/2 + joints[0][len(arms[0].Wangles)] - paddle_radius and \
                    ball.x < window.width/2 + joints[0][len(arms[0].Wangles)] + paddle_radius
 
-        inside_y = ball.y < joints[1][len(arms[0].Wangles)] and \
-                   ball.y + ball.height > joints[1][len(arms[0].Wangles)]
+        inside_y = ball.y < joints[1][len(arms[0].Wangles)] + window.height/2 and \
+                   ball.y + ball.height > joints[1][len(arms[0].Wangles)] + window.height/2
 
         return inside_x and inside_y
 
@@ -60,15 +60,15 @@ def plot():
         for i in range(len(arms)):
             for j in range(len(arms[i].Wangles)):
                 arm_batch.add(2, pyglet.gl.GL_LINES, None, \
-                    ('v2i', (window.width/2 + joints[i][0][j], joints[i][1][j], window.width/2 + joints[i][0][j + 1], joints[i][1][j + 1])), \
+                    ('v2i', (window.width/2 + joints[i][0][j], window.height/2 + joints[i][1][j], window.width/2 + joints[i][0][j + 1], window.height/2 + joints[i][1][j + 1])), \
                     ('c4B', colors[i]))
 
         # Draw a paddle at the end of the first arm.
         arm_batch.add(2, pyglet.gl.GL_LINES, None, \
-            ('v2i', (window.width/2 + joints[0][0][len(arms[0].Wangles)] - paddle_radius, \
-                    joints[0][1][len(arms[0].Wangles)], \
-                    window.width/2 + joints[0][0][len(arms[0].Wangles)] + paddle_radius, \
-                    joints[0][1][len(arms[0].Wangles)])))
+            ('v2i', (window.width/2  + joints[0][0][len(arms[0].Wangles)] - paddle_radius, \
+                     window.height/2 + joints[0][1][len(arms[0].Wangles)], \
+                     window.width/2  + joints[0][0][len(arms[0].Wangles)] + paddle_radius, \
+                     window.height/2 + joints[0][1][len(arms[0].Wangles)])))
 
         arm_batch.draw()
 
@@ -79,7 +79,7 @@ def plot():
     @window.event
     def on_mouse_motion(x, y, dx, dy):
         for i in range(len(arms)):
-            arms[i].Wangles = arms[i].pinv_jacobian([x - window.width/2, y])
+            arms[i].Wangles = arms[i].pinv_jacobian([x - window.width/2, y - window.height/2])
             # arm.Wangles = arm.slsqp([x - window.width/2, y])
 
     pyglet.app.run()
