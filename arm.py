@@ -71,17 +71,23 @@ class Arm:
     # This only works well when xy is sufficiently close to the current position!
     # Otherwise, this will require multiple iterations.
     def pinv_jacobian(self, xy):
-        inv = np.linalg.pinv(self.jacobian())
-        return self.Wangles + np.dot(inv, (xy - self.hand_xy()))
+        j = self.jacobian()
+        # start timing
+        inv = np.linalg.pinv(j)
+        dtheta = np.dot(inv, (xy - self.hand_xy()))
+        # end timing
+        return self.Wangles + dtheta
 
-    # This doesn't really work...
     def transpose_jacobian(self, xy):
         j = self.jacobian()
         t = np.transpose(j)
+        # start timing
         e = xy - self.hand_xy()
         dotted = j.dot(t).dot(e)
         a = np.inner(dotted, e) / np.inner(dotted, dotted)
-        return self.Wangles + a * np.dot(t, e)
+        dtheta = a * np.dot(t, e)
+        # end timing
+        return self.Wangles + dtheta
 
 def error_between(a, b):
     return np.sqrt(((a - b)**2).sum())
@@ -107,13 +113,13 @@ def simple_test():
 # then print the required number of iterations.
 def threshold_test(threshold = None, goal = None):
     arm = Arm(np.array([100, 100]), np.array([sp.pi/4, sp.pi/4]))
-    if goal is None: goal = np.array([0, 0])
+    if goal is None: goal = np.array([100, 0])
     if threshold is None: threshold = .01
-    arm.Wangles = arm.pinv_jacobian(goal)
+    arm.Wangles = arm.transpose_jacobian(goal)
     count = 1
     while (error_between(goal, arm.hand_xy()) > threshold and count < 50):
         count += 1
-        arm.Wangles = arm.pinv_jacobian(goal)
+        arm.Wangles = arm.transpose_jacobian(goal)
 
     print ("Threshold: " + str(threshold) + " -> " + str(count) + " iterations.")
 
