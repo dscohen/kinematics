@@ -1,6 +1,7 @@
 import numpy as np
 import scipy as sp
 import scipy.optimize
+import time
 
 class Arm:
     def __init__(self, lengths = None, start_angles = None):
@@ -51,13 +52,14 @@ class Arm:
         return result
 
     # Use the SciPy method fmin_slsqp, instead of the Jacobian, to solve for the new joint angles.
-    def slsqp(self, xy):
+    def slsqp(self, xy, arm = None):
+        if arm is None: arm = self
         def distance_func(thetas, *args):
             '''minimize this'''
-            return np.sqrt(np.sum((thetas-self.Wangles)**2))
+            return np.sqrt(np.sum((thetas-arm.Wangles)**2))
 
         def optimize(thetas, xy, *args):
-            return self.hand_xy(thetas) - xy
+            return arm.hand_xy(thetas) - xy
 
         # func is the function to minimize.
         # x0 is the initial list of arguments.
@@ -65,49 +67,40 @@ class Arm:
         # args is a list of extra arguments to pass to the f_eqcons function.
         # disp sets the desired printing verbosity.
         # See http://docs.scipy.org/doc/scipy-0.13.0/reference/generated/scipy.optimize.fmin_slsqp.html
-        return sp.optimize.fmin_slsqp(func = distance_func, x0 = self.Wangles, f_eqcons = optimize, args = [xy], disp = 0)
+        start_time = time.time()
+        arm.Wangles = sp.optimize.fmin_slsqp(func = distance_func, x0 = arm.Wangles, f_eqcons = optimize, args = [xy], disp = 0)
+        return time.time() - start_time
 
     # Solve for the new joint angles using the pseudo-inverse of the Jacobian.
     # This only works well when xy is sufficiently close to the current position!
     # Otherwise, this will require multiple iterations.
-    def pinv_jacobian(self, xy):
-        j = self.jacobian()
-        # start timing
+    def pinv_jacobian(self, xy, arm = None):
+        if arm is None: arm = self
+        j = arm.jacobian()
+        
+        start_time = time.time()
         inv = np.linalg.pinv(j)
-        dtheta = np.dot(inv, (xy - self.hand_xy()))
-        # end timing
-        return self.Wangles + dtheta
+        dtheta = np.dot(inv, (xy - arm.hand_xy()))
+        end_time = time.time()
+        arm.Wangles = arm.Wangles + dtheta
+        return end_time - start_time
 
-    def transpose_jacobian(self, xy):
-        j = self.jacobian()
+    def transpose_jacobian(self, xy, arm = None):
+        if arm is None: arm = self
+        j = arm.jacobian()
         t = np.transpose(j)
-        # start timing
-        e = xy - self.hand_xy()
+
+        start_time = time.time()
+        e = xy - arm.hand_xy()
         dotted = j.dot(t).dot(e)
         a = np.inner(dotted, e) / np.inner(dotted, dotted)
         dtheta = a * np.dot(t, e)
-        # end timing
-        return self.Wangles + dtheta
+        end_time = time.time()
+        arm.Wangles = arm.Wangles + dtheta
+        return end_time - start_time
 
 def error_between(a, b):
     return np.sqrt(((a - b)**2).sum())
-
-def simple_test():
-    arm = Arm()
-    goal = np.array([2.65, -.6])
-    print ("Start:       " + str(arm.hand_xy()))
-    print ("Goal:        " + str(goal))
-    print
-    pinv_end = arm.hand_xy(arm.pinv_jacobian(goal))
-    print ("Pinv end:    " + str(pinv_end))
-
-    arm.Wangles = arm.slsqp(goal)
-    end = arm.hand_xy()
-
-    print ("Scipy end:   " + str(end))
-    print
-    print ("Scipy Error: " + str(error_between(goal, end)))
-    print ("Pinv  Error: " + str(error_between(goal, pinv_end)))
 
 # Run the pseudo inverse method over and over, until the error falls below the threshold,
 # then print the required number of iterations.
@@ -115,13 +108,13 @@ def threshold_test(threshold = None, goal = None):
     arm = Arm(np.array([100, 100]), np.array([sp.pi/4, sp.pi/4]))
     if goal is None: goal = np.array([100, 0])
     if threshold is None: threshold = .01
-    arm.Wangles = arm.transpose_jacobian(goal)
+    time = arm.transpose_jacobian(goal)
     count = 1
     while (error_between(goal, arm.hand_xy()) > threshold and count < 50):
         count += 1
-        arm.Wangles = arm.transpose_jacobian(goal)
+        time += arm.transpose_jacobian(goal)
 
-    print ("Threshold: " + str(threshold) + " -> " + str(count) + " iterations.")
+    print ("Threshold: " + str(threshold) + " -> " + str(count) + " iterations (" + str(time) + " seconds).")
 
 def threshold_test_runner():
     for i in [-1, -3, -5, -10, -20]:
