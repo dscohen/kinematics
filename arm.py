@@ -106,21 +106,19 @@ def simple_test():
 # Run the pseudo inverse method over and over, until the error falls below the threshold,
 # then print the required number of iterations.
 def threshold_test(threshold = None, goal = None):
-    arm = Arm(np.array([100, 100, 100]), np.array([sp.pi / 4, 0, 0]))
-    print arm.hand_xy()
-    if goal is None: goal = np.array([210, 210])
-    print goal
+    arm = Arm(np.array([100, 100]), np.array([sp.pi/4, sp.pi/4]))
+    if goal is None: goal = np.array([0, 0])
     if threshold is None: threshold = .01
-    arm.Wangles = arm.transpose_jacobian(goal)
+    arm.Wangles = arm.pinv_jacobian(goal)
     count = 1
     while (error_between(goal, arm.hand_xy()) > threshold and count < 50):
         count += 1
-        arm.Wangles = arm.transpose_jacobian(goal)
+        arm.Wangles = arm.pinv_jacobian(goal)
 
     print ("Threshold: " + str(threshold) + " -> " + str(count) + " iterations.")
 
 def threshold_test_runner():
-    for i in [-2, -5, -10, -20, -50]:
+    for i in [-1, -3, -5, -10, -20]:
         threshold_test(10 ** (i))
 
 # simple_test()
