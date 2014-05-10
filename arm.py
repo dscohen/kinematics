@@ -102,24 +102,28 @@ class Arm:
 def error_between(a, b):
     return np.sqrt(((a - b)**2).sum())
 
-# Run the pseudo inverse method over and over, until the error falls below the threshold,
-# then print the required number of iterations.
-def threshold_test(threshold = None, goal = None):
-    arm = Arm(np.array([100, 100]), np.array([sp.pi/4, sp.pi/4]))
+# Run the solving method over and over, until the error falls below the threshold,
+# then print the required number of iterations and time taken to reach that threshold.
+def threshold_test(method_name = None, arm = None, threshold = None, goal = None):
+    if arm is None: arm = Arm(np.array([100, 100]), np.array([sp.pi/4, sp.pi/4]))
+    if method_name is None or method_name == "transpose": method = arm.transpose_jacobian
+    elif method_name == "sls":       method = arm.slsqp
+    elif method_name == "pinv":      method = arm.pinv_jacobian
+    elif method_name == "transpose": method = arm.transpose_jacobian
+    else:                            method = arm.transpose_jacobian
     if goal is None: goal = np.array([100, 0])
     if threshold is None: threshold = .01
-    time = arm.transpose_jacobian(goal)
+    time = method(goal)
     count = 1
     while (error_between(goal, arm.hand_xy()) > threshold and count < 50):
         count += 1
-        time += arm.transpose_jacobian(goal)
+        time += method(goal)
 
-    print ("Threshold: " + str(threshold) + " -> " + str(count) + " iterations (" + str(time) + " seconds).")
+    print ("Threshold: " + str(threshold) + " -> " + str(count) + " iterations (" + str(time * 1000) + " ms, " + method_name + ").")
 
 def threshold_test_runner():
-    for i in [-1, -3, -5, -10, -20]:
-        threshold_test(10 ** (i))
+    for i in [-1, -3, -5, -10, -15]:
+        threshold_test(method_name = "pinv", threshold = 10 ** (i))
+        threshold_test(method_name = "transpose", threshold = 10 ** (i))
 
-# simple_test()
-# print
 threshold_test_runner()
