@@ -103,21 +103,23 @@ def error_between(a, b):
     return np.sqrt(((a - b)**2).sum())
 
 # calculates maximum distance that end effetor can reach based on arm lengths:
-#takes in np.array of endpoint (x,y)
+#takes in np.array of endpoint (x,y), returns np array
 #r = x^2 + y^2
 def max_length(arms, goal):
     r = np.sum(arms)
-    if (np.sqrt(goal[0]**2 + goal[1]**2)) <= r**2:
+    length = np.sqrt(goal[0]**2 + goal[1]**2)
+    if abs(length) <= r:
         return goal
-    m = goal[1]/goal[0]
-    coeff = [1,m,-1*r]
+    if (goal[0] == 0) or (goal[1] == 0):
+        return length * (goal/goal)
+    m = float(goal[1])/goal[0]
+    coeff = [(m**2+1),0,-1*r**2]
     x = np.roots(coeff)
     if (x[0] < 0 and goal[0] < 0):
         x = x[0]
     else:
         x = x[1]
     y = m*x
-
     return np.array([x,y])
 
 
@@ -145,4 +147,5 @@ def threshold_test_runner():
         threshold_test(method_name = "pinv", threshold = 10 ** (i))
         threshold_test(method_name = "transpose", threshold = 10 ** (i))
 
+print max_length(np.array([10,10]), np.array([24,10]))
 threshold_test_runner()
