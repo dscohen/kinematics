@@ -102,6 +102,25 @@ class Arm:
 def error_between(a, b):
     return np.sqrt(((a - b)**2).sum())
 
+# calculates maximum distance that end effetor can reach based on arm lengths:
+#takes in np.array of endpoint (x,y)
+#r = x^2 + y^2
+def max_length(arms, goal):
+    r = np.sum(arms)
+    if (np.sqrt(goal[0]**2 + goal[1]**2)) <= r**2:
+        return goal
+    m = goal[1]/goal[0]
+    coeff = [1,m,-1*r]
+    x = np.roots(coeff)
+    if (x[0] < 0 and goal[0] < 0):
+        x = x[0]
+    else:
+        x = x[1]
+    y = m*x
+
+    return np.array([x,y])
+
+
 # Run the solving method over and over, until the error falls below the threshold,
 # then print the required number of iterations and time taken to reach that threshold.
 def threshold_test(method_name = None, arm = None, threshold = None, goal = None):
