@@ -2,6 +2,7 @@ import numpy as np
 import scipy as sp
 import scipy.optimize
 import time
+import random
 
 class Arm:
     def __init__(self, lengths = None, start_angles = None):
@@ -9,6 +10,8 @@ class Arm:
         if start_angles is None: start_angles = np.zeros(len(lengths))
         self.lengths = lengths
         self.Wangles = start_angles
+        # Array of random colors used to make each arm a different color.
+        self.colors = (255 - random.randint(0, 255), 255 - random.randint(0, 255), 255 - random.randint(0, 255), 255) * 2
 
     # Get the position of the end effector for the given joint angles.
     # If no angles are given, this uses the current working angles of the joints.
