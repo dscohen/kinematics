@@ -122,6 +122,8 @@ def max_length(arms, goal):
     y = m*x
     return np.array([x,y])
 
+def conditions(J):
+    condition = np.linalg.cond(J)
 
 # Run the solving method over and over, until the error falls below the threshold,
 # then print the required number of iterations and time taken to reach that threshold.
@@ -147,5 +149,4 @@ def threshold_test_runner():
         threshold_test(method_name = "pinv", threshold = 10 ** (i))
         threshold_test(method_name = "transpose", threshold = 10 ** (i))
 
-print max_length(np.array([10,10]), np.array([24,10]))
 threshold_test_runner()
