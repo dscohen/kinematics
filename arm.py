@@ -138,7 +138,7 @@ def threshold_test(method_name = None, arm = None, threshold = None, goal = None
     count = 1
     while (error_between(goal, arm.hand_xy()) > threshold and count < 50):
         count += 1
-        time += method(goal)
+        time += method(goal, arm = arm)
 
     print ("Threshold: " + str(threshold) + " -> " + str(count) + " iterations (" + str(time * 1000) + " ms, " + method_name + ").")
 
