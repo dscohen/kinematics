@@ -7,6 +7,7 @@ class Arm:
     def __init__(self, lengths = None, start_angles = None):
         if lengths is None: lengths = np.array([200,150,100])
         if start_angles is None: start_angles = np.zeros(len(lengths))
+        self.J
         self.lengths = lengths
         self.Wangles = start_angles
 
@@ -77,6 +78,7 @@ class Arm:
     def pinv_jacobian(self, xy, arm = None):
         if arm is None: arm = self
         j = arm.jacobian()
+        self.J = j
         
         start_time = time.time()
         inv = np.linalg.pinv(j)
@@ -89,6 +91,7 @@ class Arm:
         if arm is None: arm = self
         j = arm.jacobian()
         t = np.transpose(j)
+        self.J = t
 
         start_time = time.time()
         e = xy - arm.hand_xy()
@@ -98,6 +101,10 @@ class Arm:
         end_time = time.time()
         arm.Wangles = arm.Wangles + dtheta
         return end_time - start_time
+
+    def conditions(self):
+        condition = np.linalg.cond(self.J)
+        return condition
 
 def error_between(a, b):
     return np.sqrt(((a - b)**2).sum())
@@ -122,8 +129,6 @@ def max_length(arms, goal):
     y = m*x
     return np.array([x,y])
 
-def conditions(J):
-    condition = np.linalg.cond(J)
 
 # Run the solving method over and over, until the error falls below the threshold,
 # then print the required number of iterations and time taken to reach that threshold.
@@ -136,17 +141,34 @@ def threshold_test(method_name = None, arm = None, threshold = None, goal = None
     else:                            method = arm.transpose_jacobian
     if goal is None: goal = np.array([100, 0])
     if threshold is None: threshold = .01
+    start_xy = arm.hand_xy()
     time = method(goal)
+    c_num = arm.conditions()
     count = 1
     while (error_between(goal, arm.hand_xy()) > threshold and count < 50):
         count += 1
         time += method(goal, arm = arm)
+        temp = arm.conditions()
+        if (c_num > temp):
+            c_num = temp
 
-    print ("Threshold: " + str(threshold) + " -> " + str(count) + " iterations (" + str(time * 1000) + " ms, " + method_name + ").")
+    end = arm.hand_xy()
+    print ("Start -> Finish" + start + " -> " + end)
+    print ("Threshold: " + str(threshold) + " -> " + str(count) + " iterations (" + str(time * 1000) + " ms, " + method_name + ") Condition -> " + c_num)
+
 
 def threshold_test_runner():
     for i in [-1, -3, -5, -10, -15]:
         threshold_test(method_name = "pinv", threshold = 10 ** (i))
         threshold_test(method_name = "transpose", threshold = 10 ** (i))
 
+def goal_test_runner():
+    for item in [[200,0],[190,0],[0,0],[-120,-70]]:
+        threshold_test(method_name = "sls", threshold = 10 ** (-5), goal = np.array([item[0],item[1]]))
+        threshold_test(method_name = "pinv", threshold = 10 ** (-5), goal = np.array([item[0],item[1]]))
+        threshold_test(method_name = "transpose", threshold = 10 ** (-5), goal = np.array([item[0],item[1]]))
+
+print "Threshold test"
 threshold_test_runner()
+print "Goal test"
+goal_test_runner()
