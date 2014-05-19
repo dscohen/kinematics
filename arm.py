@@ -8,7 +8,7 @@ class Arm:
     def __init__(self, lengths = None, start_angles = None):
         if lengths is None: lengths = np.array([200,150,100])
         if start_angles is None: start_angles = np.zeros(len(lengths))
-        self.J
+        self.J = None
         self.lengths = lengths
         self.Wangles = start_angles
         # Array of random colors used to make each arm a different color.
@@ -144,29 +144,35 @@ def threshold_test(method_name = None, arm = None, threshold = None, goal = None
     else:                            method = arm.transpose_jacobian
     if goal is None: goal = np.array([100, 0])
     if threshold is None: threshold = .01
-    start_xy = arm.hand_xy()
+    start = arm.hand_xy()
     time = method(goal)
-    c_num = arm.conditions()
+    if method_name != "sls":
+        c_num = arm.conditions()
     count = 1
     while (error_between(goal, arm.hand_xy()) > threshold and count < 50):
         count += 1
         time += method(goal, arm = arm)
-        temp = arm.conditions()
-        if (c_num > temp):
-            c_num = temp
+        if method_name != "sls":
+            temp = arm.conditions()
+            if (c_num > temp):
+                c_num = temp
 
     end = arm.hand_xy()
-    print ("Start -> Finish" + start + " -> " + end)
-    print ("Threshold: " + str(threshold) + " -> " + str(count) + " iterations (" + str(time * 1000) + " ms, " + method_name + ") Condition -> " + c_num)
+    print ("Start -> Finish", start, " -> ", end)
+    print ("Threshold: " + str(threshold) + " -> " + str(count) + " iterations (" + str(time * 1000) + " ms, " + method_name + ")")
+    if (method_name != "sls"):
+        print ("Condition number -> ", c_num)
+    print ("")
 
 
 def threshold_test_runner():
     for i in [-1, -3, -5, -10, -15]:
+        threshold_test(method_name = "sls", threshold = 10 ** (i))
         threshold_test(method_name = "pinv", threshold = 10 ** (i))
         threshold_test(method_name = "transpose", threshold = 10 ** (i))
 
 def goal_test_runner():
-    for item in [[200,0],[190,0],[0,0],[-120,-70]]:
+    for item in [[200,0],[180,0],[0,0],[-70,-170]]:
         threshold_test(method_name = "sls", threshold = 10 ** (-5), goal = np.array([item[0],item[1]]))
         threshold_test(method_name = "pinv", threshold = 10 ** (-5), goal = np.array([item[0],item[1]]))
         threshold_test(method_name = "transpose", threshold = 10 ** (-5), goal = np.array([item[0],item[1]]))
