@@ -32,19 +32,20 @@ def plot():
         return inside_x and inside_y
 
     def add_arms_to_batch(batch, arms):
-        joints = [arms[i].get_joints() for i in range(len(arms))]
-        for i in range(len(arms)):
-            for j in range(len(arms[i].Wangles)):
-                batch.add(2, pyglet.gl.GL_LINES, None, \
-                    ('v2i', (window.width/2 + joints[i][0][j], window.height/2 + joints[i][1][j], window.width/2 + joints[i][0][j + 1], window.height/2 + joints[i][1][j + 1])), \
-                    ('c4B', arms[i].colors))
+        if (len(arms) > 0):
+            joints = [arms[i].get_joints() for i in range(len(arms))]
+            for i in range(len(arms)):
+                for j in range(len(arms[i].Wangles)):
+                    batch.add(2, pyglet.gl.GL_LINES, None, \
+                        ('v2i', (window.width/2 + joints[i][0][j], window.height/2 + joints[i][1][j], window.width/2 + joints[i][0][j + 1], window.height/2 + joints[i][1][j + 1])), \
+                        ('c4B', arms[i].colors))
 
-        # Draw a paddle at the end of the first arm.
-        batch.add(2, pyglet.gl.GL_LINES, None, \
-            ('v2i', (window.width/2  + joints[0][0][len(arms[0].Wangles)] - paddle_radius, \
-                     window.height/2 + joints[0][1][len(arms[0].Wangles)], \
-                     window.width/2  + joints[0][0][len(arms[0].Wangles)] + paddle_radius, \
-                     window.height/2 + joints[0][1][len(arms[0].Wangles)])))
+            # Draw a paddle at the end of the first arm.
+            batch.add(2, pyglet.gl.GL_LINES, None, \
+                ('v2i', (window.width/2  + joints[0][0][len(arms[0].Wangles)] - paddle_radius, \
+                         window.height/2 + joints[0][1][len(arms[0].Wangles)], \
+                         window.width/2  + joints[0][0][len(arms[0].Wangles)] + paddle_radius, \
+                         window.height/2 + joints[0][1][len(arms[0].Wangles)])))
 
     # This method is called on a loop by the pyglet backend. Every frame is redrawn by this function.
     @window.event
@@ -71,7 +72,7 @@ def plot():
         
         add_arms_to_batch(arm_batch, pinv_arms)
         add_arms_to_batch(arm_batch, tran_arms)
-        # add_arms_to_batch(arm_batch, sls_arms)
+        add_arms_to_batch(arm_batch, sls_arms)
 
         arm_batch.draw()
 
