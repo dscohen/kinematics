@@ -155,6 +155,7 @@ def max_length(arms, goal):
 # then print the required number of iterations and time taken to reach that threshold.
 def threshold_test(method_name = None, arm = None, threshold = None, goal = None, pretty = False):
     if arm is None: arm = Arm(np.array([200 / 5] * 5))
+    else: arm = Arm(np.array([200/arm]*arm))
     if method_name is None or method_name == "transpose": method = arm.transpose_jacobian
     elif method_name == "sls":       method = arm.slsqp
     elif method_name == "pinv":      method = arm.pinv_jacobian
@@ -201,12 +202,12 @@ def threshold_test_runner():
 def goal_test_runner():
     print("n = 2")
     for item in [[200,0],[180,0],[0,0],[-70,-170], [300, 0]]:
-        arms = Arm(np.array([200 / 2] * 2))
+        i = 2
         print("********* " + str(item))
-        threshold_test(arm = arms,method_name = "sls",         threshold = 10 ** (-5), goal = np.array([item[0],item[1]]), pretty = True)
-        threshold_test(arm = arms,method_name = "pinv",        threshold = 10 ** (-5), goal = np.array([item[0],item[1]]), pretty = True)
-        threshold_test(arm = arms,method_name = "transpose",   threshold = 10 ** (-5), goal = np.array([item[0],item[1]]), pretty = True)
-        threshold_test(arm = arms,method_name = "atranspose",  threshold = 10 ** (-5), goal = np.array([item[0],item[1]]), pretty = True)
+        threshold_test(i,method_name = "sls",         threshold = 10 ** (-5), goal = np.array([item[0],item[1]]), pretty = True)
+        threshold_test(i,method_name = "pinv",        threshold = 10 ** (-5), goal = np.array([item[0],item[1]]), pretty = True)
+        threshold_test(i,method_name = "transpose",   threshold = 10 ** (-5), goal = np.array([item[0],item[1]]), pretty = True)
+        threshold_test(i,method_name = "atranspose",  threshold = 10 ** (-5), goal = np.array([item[0],item[1]]), pretty = True)
 
 
 
