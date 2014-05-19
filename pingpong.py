@@ -4,9 +4,9 @@ import scipy as sp
 import pyglet
 
 def plot():
-    pinv_arms  = [Arm(np.array([300 / i] * i)) for i in [3]]   # Array of arms with varying numbers of links to be drawn at the same time.
+    pinv_arms  = [Arm(np.array([300 / i] * i)) for i in [20]]   # Array of arms with varying numbers of links to be drawn at the same time.
     tran_arms  = [Arm(np.array([300 / i] * i)) for i in [3]]
-    tran2_arms = [Arm(np.array([300 / i] * i)) for i in [3]]
+    tran2_arms = [Arm(np.array([300 / i] * i)) for i in []]
     sls_arms = [Arm(np.array([300 / i] * i)) for i in []]
 
     # Make the pyglet window!
@@ -88,7 +88,7 @@ def plot():
             pinv_arms[i].pinv_jacobian([x - window.width/2, y - window.height/2])
         for i in range(len(tran_arms)):
             tran_arms[i].transpose_jacobian([x - window.width/2, y - window.height/2])
-        for i in range(len(tran_arms)):
+        for i in range(len(tran2_arms)):
             tran2_arms[i].transpose_no_a_jacobian([x - window.width/2, y - window.height/2])
         for i in range(len(sls_arms)):
             sls_arms[i].slsqp([x - window.width/2, y - window.height/2])
