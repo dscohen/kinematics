@@ -72,7 +72,7 @@ class Arm:
         # disp sets the desired printing verbosity.
         # See http://docs.scipy.org/doc/scipy-0.13.0/reference/generated/scipy.optimize.fmin_slsqp.html
         start_time = time.time()
-        arm.Wangles = sp.optimize.fmin_slsqp(func = distance_func, x0 = arm.Wangles, f_eqcons = optimize, args = [xy], disp = 0)
+        arm.Wangles = sp.optimize.fmin_slsqp(func = distance_func, x0 = arm.Wangles, f_eqcons = optimize, args = (xy[0], xy[1]), disp = 0)
         return time.time() - start_time
 
     # Solve for the new joint angles using the pseudo-inverse of the Jacobian.
@@ -157,11 +157,10 @@ def threshold_test(method_name = None, arm = None, threshold = None, goal = None
             if (c_num > temp):
                 c_num = temp
 
-    end = arm.hand_xy()
-    print (str(start) + " -> " + str(end) + " (" + str(error_between(start, end)) + ")")
+    print (str(start) + " -> " + str(goal) + " (" + str(error_between(start, goal)) + ")")
     print ("Threshold: " + str(threshold) + " -> " + str(count) + " iterations (" + str(time * 1000) + " ms, " + method_name + ")")
-    if (method_name != "sls"):
-        print ("Condition number -> " + str(c_num))
+    # if (method_name != "sls"):
+    #     print ("Condition number -> " + str(c_num))
     print ("")
 
 
@@ -179,5 +178,5 @@ def goal_test_runner():
 
 print "Threshold test"
 threshold_test_runner()
-print "Goal test"
-goal_test_runner()
+# print "Goal test"
+# goal_test_runner()
