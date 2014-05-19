@@ -157,7 +157,7 @@ def threshold_test(method_name = None, arm = None, threshold = None, goal = None
         time += method(goal, arm = arm, threshold = threshold)
         if method_name != "sls":
             temp = arm.conditions()
-            if (c_num > temp):
+            if (c_num < temp):
                 c_num = temp
 
     end = arm.hand_xy()
@@ -178,7 +178,7 @@ def threshold_test_runner():
         threshold_test(method_name = "transpose", threshold = 10 ** (i))
 
 def goal_test_runner():
-    for item in [[200,0],[180,0],[0,0],[-70,-170]]:
+    for item in [[200,0],[180,0],[0,0],[-70,-170], [300, 0]]:
         print("*********")
         threshold_test(method_name = "sls", threshold = 10 ** (-5), goal = np.array([item[0],item[1]]))
         threshold_test(method_name = "pinv", threshold = 10 ** (-5), goal = np.array([item[0],item[1]]))
