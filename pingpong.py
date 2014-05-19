@@ -6,7 +6,7 @@ import pyglet
 def plot():
     pinv_arms  = [Arm(np.array([300 / i] * i)) for i in [3]]   # Array of arms with varying numbers of links to be drawn at the same time.
     tran_arms  = [Arm(np.array([300 / i] * i)) for i in [3]]
-    sls_arms = [Arm(np.array([300 / i] * i)) for i in [3]]
+    sls_arms = [Arm(np.array([300 / i] * i)) for i in []]
 
     # Make the pyglet window!
     window = pyglet.window.Window()
@@ -23,11 +23,11 @@ def plot():
 
     # Returns true if the paddle is currently inside the ball.
     def intersect_paddle(joints):
-        inside_x = ball.x + ball.width > window.width/2 + joints[0][len(sls_arms[0].Wangles)] - paddle_radius and \
-                   ball.x < window.width/2 + joints[0][len(sls_arms[0].Wangles)] + paddle_radius
+        inside_x = ball.x + ball.width > window.width/2 + joints[0][len(tran_arms[0].Wangles)] - paddle_radius and \
+                   ball.x < window.width/2 + joints[0][len(tran_arms[0].Wangles)] + paddle_radius
 
-        inside_y = ball.y < joints[1][len(sls_arms[0].Wangles)] + window.height/2 and \
-                   ball.y + ball.height > joints[1][len(sls_arms[0].Wangles)] + window.height/2
+        inside_y = ball.y < joints[1][len(tran_arms[0].Wangles)] + window.height/2 and \
+                   ball.y + ball.height > joints[1][len(tran_arms[0].Wangles)] + window.height/2
 
         return inside_x and inside_y
 
@@ -52,12 +52,12 @@ def plot():
         window.clear()
         fps_display.draw()
 
-        sls_joints = [sls_arms[i].get_joints() for i in range(len(sls_arms))]
+        tran_joints = [tran_arms[i].get_joints() for i in range(len(tran_arms))]
 
         # Check if the ball has hit the edge of the window or the paddle.
         if ball.x > window.width - ball.width or ball.x < 0:
             ball.dx *= -1
-        if (ball.y > window.height - ball.height or ball.y < 0) or intersect_paddle(sls_joints[0]):
+        if (ball.y > window.height - ball.height or ball.y < 0) or intersect_paddle(tran_joints[0]):
             ball.dy *= -1
 
         # Update the ball location.
@@ -71,7 +71,7 @@ def plot():
         
         add_arms_to_batch(arm_batch, pinv_arms)
         add_arms_to_batch(arm_batch, tran_arms)
-        add_arms_to_batch(arm_batch, sls_arms)
+        # add_arms_to_batch(arm_batch, sls_arms)
 
         arm_batch.draw()
 

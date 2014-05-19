@@ -157,10 +157,13 @@ def threshold_test(method_name = None, arm = None, threshold = None, goal = None
             if (c_num > temp):
                 c_num = temp
 
+    end = arm.hand_xy()
+
     print (str(start) + " -> " + str(goal) + " (" + str(error_between(start, goal)) + ")")
+    print ("Final position: " + str(end) + " (error: " + str(error_between(goal, end)) + ")")
     print ("Threshold: " + str(threshold) + " -> " + str(count) + " iterations (" + str(time * 1000) + " ms, " + method_name + ")")
-    # if (method_name != "sls"):
-    #     print ("Condition number -> " + str(c_num))
+    if (method_name != "sls"):
+        print ("Condition number -> " + str(c_num))
     print ("")
 
 
