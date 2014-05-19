@@ -56,8 +56,9 @@ class Arm:
         return result
 
     # Use the SciPy method fmin_slsqp, instead of the Jacobian, to solve for the new joint angles.
-    def slsqp(self, xy, arm = None):
+    def slsqp(self, xy, arm = None, threshold = None):
         if arm is None: arm = self
+        if threshold is None: threshold = 1**(-6)
         def distance_func(thetas, *args):
             '''minimize this'''
             return np.sqrt(np.sum((thetas-arm.Wangles)**2))
@@ -72,14 +73,15 @@ class Arm:
         # disp sets the desired printing verbosity.
         # See http://docs.scipy.org/doc/scipy-0.13.0/reference/generated/scipy.optimize.fmin_slsqp.html
         start_time = time.time()
-        arm.Wangles = sp.optimize.fmin_slsqp(func = distance_func, x0 = arm.Wangles, f_eqcons = optimize, args = (xy[0], xy[1]), disp = 0)
+        arm.Wangles = sp.optimize.fmin_slsqp(func = distance_func, x0 = arm.Wangles, f_eqcons = optimize, args = (xy,), disp = 0)
         return time.time() - start_time
 
     # Solve for the new joint angles using the pseudo-inverse of the Jacobian.
     # This only works well when xy is sufficiently close to the current position!
     # Otherwise, this will require multiple iterations.
-    def pinv_jacobian(self, xy, arm = None):
+    def pinv_jacobian(self, xy, arm = None, threshold = None):
         if arm is None: arm = self
+        if threshold is None: threshold = 1**(-6)
         j = arm.jacobian()
         self.J = j
         
@@ -90,8 +92,9 @@ class Arm:
         arm.Wangles = arm.Wangles + dtheta
         return end_time - start_time
 
-    def transpose_jacobian(self, xy, arm = None):
+    def transpose_jacobian(self, xy, arm = None, threshold = None):
         if arm is None: arm = self
+        if threshold is None: threshold = 1**(-6)
         j = arm.jacobian()
         t = np.transpose(j)
         self.J = t
@@ -145,13 +148,13 @@ def threshold_test(method_name = None, arm = None, threshold = None, goal = None
     if goal is None: goal = np.array([100, 0])
     if threshold is None: threshold = .01
     start = arm.hand_xy()
-    time = method(goal)
+    time = method(goal, threshold = threshold)
     if method_name != "sls":
         c_num = arm.conditions()
     count = 1
     while (error_between(goal, arm.hand_xy()) > threshold and count < 50):
         count += 1
-        time += method(goal, arm = arm)
+        time += method(goal, arm = arm, threshold = threshold)
         if method_name != "sls":
             temp = arm.conditions()
             if (c_num > temp):
@@ -169,17 +172,19 @@ def threshold_test(method_name = None, arm = None, threshold = None, goal = None
 
 def threshold_test_runner():
     for i in [-1, -3, -5, -10, -15]:
+        print("*********")
         threshold_test(method_name = "sls", threshold = 10 ** (i))
         threshold_test(method_name = "pinv", threshold = 10 ** (i))
         threshold_test(method_name = "transpose", threshold = 10 ** (i))
 
 def goal_test_runner():
     for item in [[200,0],[180,0],[0,0],[-70,-170]]:
+        print("*********")
         threshold_test(method_name = "sls", threshold = 10 ** (-5), goal = np.array([item[0],item[1]]))
         threshold_test(method_name = "pinv", threshold = 10 ** (-5), goal = np.array([item[0],item[1]]))
         threshold_test(method_name = "transpose", threshold = 10 ** (-5), goal = np.array([item[0],item[1]]))
 
 print "Threshold test"
 threshold_test_runner()
-# print "Goal test"
-# goal_test_runner()
+print "Goal test"
+goal_test_runner()
