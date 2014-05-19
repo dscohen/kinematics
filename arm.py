@@ -204,10 +204,10 @@ def goal_test_runner():
     for item in [[200,0],[180,0],[0,0],[-70,-170], [300, 0]]:
         i = 2
         print("********* " + str(item))
-        threshold_test(i,method_name = "sls",         threshold = 10 ** (-5), goal = np.array([item[0],item[1]]), pretty = True)
-        threshold_test(i,method_name = "pinv",        threshold = 10 ** (-5), goal = np.array([item[0],item[1]]), pretty = True)
-        threshold_test(i,method_name = "transpose",   threshold = 10 ** (-5), goal = np.array([item[0],item[1]]), pretty = True)
-        threshold_test(i,method_name = "atranspose",  threshold = 10 ** (-5), goal = np.array([item[0],item[1]]), pretty = True)
+        threshold_test(arm = i, method_name = "sls",         threshold = 10 ** (-5), goal = np.array([item[0],item[1]]), pretty = True)
+        threshold_test(arm = i, method_name = "pinv",        threshold = 10 ** (-5), goal = np.array([item[0],item[1]]), pretty = True)
+        threshold_test(arm = i, method_name = "transpose",   threshold = 10 ** (-5), goal = np.array([item[0],item[1]]), pretty = True)
+        threshold_test(arm = i, method_name = "atranspose",  threshold = 10 ** (-5), goal = np.array([item[0],item[1]]), pretty = True)
 
 
 
