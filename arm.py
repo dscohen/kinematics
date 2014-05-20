@@ -153,7 +153,7 @@ def max_length(arms, goal):
 
 # Run the solving method over and over, until the error falls below the threshold,
 # then print the required number of iterations and time taken to reach that threshold.
-def threshold_test(method_name = None, arm = None, threshold = None, goal = None, pretty = False):
+def threshold_test(method_name = None, arm = None, threshold = None, goal = None, pretty = True):
     if arm is None: arm = Arm(np.array([200 / 3] * 3))
     else: arm = Arm(np.array([200/arm]*arm))
     if method_name is None or method_name == "transpose": method = arm.transpose_jacobian
@@ -188,39 +188,40 @@ def threshold_test(method_name = None, arm = None, threshold = None, goal = None
             print ("Condition number -> " + str(c_num))
         print ("")
     else:
-        print ("{:13s}: [iter: {:2d}, c: {:.0f}, t: {:.1f}]          \t[{:.1f}, {:.1f}] [{:.1f}, {:.1f}] \t ({:.1f}) \t -> [{:.1f}, {:.1f}]".format(method_name, count, c_num, time * 1000, start[0], start[1], goal[0], goal[1], error_between(start, goal), end[0], end[1]))
+        print ("{:13s}: [iter: {:2d}, c: {:.0f}, t: {:.1f}]          \t[{:.1f}, {:.1f}] [{:.1f}, {:.1f}] \t ({:.1f}) \t -> [{:.1f}, {:.1f}]\t\t\t({:.0f})".format(method_name, count, c_num, time * 1000, start[0], start[1], goal[0], goal[1], error_between(start, goal), end[0], end[1], error_between(end, goal)))
 
 
 def threshold_test_runner():
     for i in [-1, -3, -5, -10, -15]:
         print("********* " + str(10 ** (i)))
-        threshold_test(method_name = "sls", threshold = 10 ** (i), pretty = True)
-        threshold_test(method_name = "pinv", threshold = 10 ** (i), pretty = True)
-        threshold_test(method_name = "transpose", threshold = 10 ** (i), pretty = True)
-        threshold_test(method_name = "atranspose", threshold = 10 ** (i), pretty = True)
+        threshold_test(method_name = "sls",         threshold = 10 ** (i))
+        threshold_test(method_name = "pinv",        threshold = 10 ** (i))
+        threshold_test(method_name = "transpose",   threshold = 10 ** (i))
+        threshold_test(method_name = "atranspose",  threshold = 10 ** (i))
 
 def goal_test_runner():
     print("n = 5")
     for item in [[200,0],[180,0],[0,0],[-70,-170], [300, 0]]:
         i = 5
         print("********* " + str(item))
-        threshold_test(arm = i, method_name = "sls",         threshold = 10 ** (-5), goal = np.array([item[0],item[1]]), pretty = True)
-        threshold_test(arm = i, method_name = "pinv",        threshold = 10 ** (-5), goal = np.array([item[0],item[1]]), pretty = True)
-        threshold_test(arm = i, method_name = "transpose",   threshold = 10 ** (-5), goal = np.array([item[0],item[1]]), pretty = True)
-        threshold_test(arm = i, method_name = "atranspose",  threshold = 10 ** (-5), goal = np.array([item[0],item[1]]), pretty = True)
+        threshold_test(arm = i, method_name = "sls",         threshold = 10 ** (-5), goal = np.array([item[0],item[1]]))
+        threshold_test(arm = i, method_name = "pinv",        threshold = 10 ** (-5), goal = np.array([item[0],item[1]]))
+        threshold_test(arm = i, method_name = "transpose",   threshold = 10 ** (-5), goal = np.array([item[0],item[1]]))
+        threshold_test(arm = i, method_name = "atranspose",  threshold = 10 ** (-5), goal = np.array([item[0],item[1]]))
 
 
 
     print("n = 3")
     for item in [[200,0],[180,0],[0,0],[-70,-170], [300, 0]]:
+        i = 3
         print("********* " + str(item))
-        threshold_test(method_name = "sls",         threshold = 10 ** (-5), goal = np.array([item[0],item[1]]), pretty = True)
-        threshold_test(method_name = "pinv",        threshold = 10 ** (-5), goal = np.array([item[0],item[1]]), pretty = True)
-        threshold_test(method_name = "transpose",   threshold = 10 ** (-5), goal = np.array([item[0],item[1]]), pretty = True)
-        threshold_test(method_name = "atranspose",  threshold = 10 ** (-5), goal = np.array([item[0],item[1]]), pretty = True)
+        threshold_test(arm = i, method_name = "sls",         threshold = 10 ** (-5), goal = np.array([item[0],item[1]]))
+        threshold_test(arm = i, method_name = "pinv",        threshold = 10 ** (-5), goal = np.array([item[0],item[1]]))
+        threshold_test(arm = i, method_name = "transpose",   threshold = 10 ** (-5), goal = np.array([item[0],item[1]]))
+        threshold_test(arm = i, method_name = "atranspose",  threshold = 10 ** (-5), goal = np.array([item[0],item[1]]))
 
 # print "            Threshold test"
 # threshold_test_runner()
 # print
-# print "            Goal test"
-# goal_test_runner()
+print "            Goal test"
+goal_test_runner()
